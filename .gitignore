@@ -1,0 +1,8 @@
+ios/www/
+ios/build/
+ios/Pods/
+ios/*.xcodeproj
+ios/*.xcworkspace
+ios/Podfile.lock
+ios/Payload/
+*.ipa

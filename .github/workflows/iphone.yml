@@ -1,0 +1,49 @@
+name: IBStv iPhone-app bouwen
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hulpmiddelen installeren
+        run: brew install xcodegen
+
+      - name: Speler in de app zetten
+        run: |
+          rm -rf ios/www && mkdir -p ios/www
+          cp -R app/index.html app/vendor app/fonts app/icon.png ios/www/
+
+      - name: Xcode-project maken
+        working-directory: ios
+        run: |
+          xcodegen generate
+          pod install --repo-update
+
+      - name: App bouwen (zonder ondertekening)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -workspace IBStv.xcworkspace -scheme IBStv -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tail -n 80
+
+      - name: IPA maken
+        working-directory: ios
+        run: |
+          APP=$(find build/Build/Products -maxdepth 2 -name 'IBStv.app' -type d | head -1)
+          test -n "$APP"
+          rm -rf Payload && mkdir Payload && cp -R "$APP" Payload/
+          zip -qry IBStv-iPhone.ipa Payload
+          ls -l IBStv-iPhone.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IBStv-iPhone
+          path: ios/IBStv-iPhone.ipa

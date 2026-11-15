@@ -1,0 +1,74 @@
+IBStv VOOR DE IPHONE
+====================
+Apple laat je een app niet zomaar als bestand installeren. Daarom gaat het
+in twee delen:
+  A. GitHub bouwt de app voor je (gratis, op een Mac van GitHub).
+  B. Jij zet hem met Sideloadly vanaf je Windows-pc op je iPhone.
+Werkt op iPhones met iOS 15 of nieuwer.
+
+A. DE APP LATEN BOUWEN (EENMALIG, ONGEVEER 20 MINUTEN)
+1. Maak een gratis account op github.com.
+2. Klik rechtsboven op + > New repository. Geef hem een naam, bijvoorbeeld
+   ibstv-iphone, kies Private en klik op Create repository.
+3. Klik op "uploading an existing file". Pak IBStv-iPhone-bron.zip uit en
+   sleep ALLE onderdelen erin: de mappen app, ios en .github en de
+   bestanden .gitignore en LEESMIJ-iPhone.txt.
+   Let op: de map .github is op een Mac verborgen. Op Windows zie je hem
+   gewoon. Zonder die map wordt er niets gebouwd.
+4. Klik onderaan op Commit changes.
+5. Klik bovenaan op Actions. Je ziet "IBStv iPhone-app bouwen" lopen.
+   Dat duurt 10 tot 20 minuten.
+6. Een groen vinkje betekent: klaar. Klik erop en download onderaan bij
+   Artifacts "IBStv-iPhone". Je krijgt een zip met IBStv-iPhone.ipa.
+   Een rood kruis? Klik erop, kopieer wat er bij de rode stap staat en
+   stuur het naar mij.
+
+B. OP JE IPHONE ZETTEN MET SIDELOADLY (WINDOWS)
+1. Installeer iTunes en iCloud van de website van Apple (de gewone
+   versies, niet die uit de Microsoft Store), en daarna Sideloadly van
+   sideloadly.io.
+2. Sluit je iPhone met een kabel aan en tik op de iPhone op Vertrouw.
+3. Sleep IBStv-iPhone.ipa naar Sideloadly, vul je Apple ID in en klik op
+   Start. Het wachtwoord gaat alleen naar Apple, niet naar mij.
+4. Op de iPhone, eenmalig:
+   - iOS 16 of nieuwer: Instellingen > Privacy en beveiliging >
+     Ontwikkelaarsmodus aan, en herstart de iPhone.
+   - Instellingen > Algemeen > VPN en apparaatbeheer > tik op je Apple ID >
+     Vertrouw.
+5. Open IBStv en log in met je Xtream Codes-gegevens.
+
+HOE LANG WERKT DE APP?
+- Met een gratis Apple ID: 7 dagen. Daarna start hij niet meer. Sluit de
+  iPhone aan en doe stap B3 opnieuw; je login en favorieten blijven
+  bewaard. Sideloadly kan dit ook automatisch doen als de pc aan staat.
+- Met een betaald Apple Developer-account (99 dollar per jaar): 1 jaar.
+
+BEDIENING
+- De app opent op Home: verder kijken, je laatste zenders, favorieten en
+  nieuwe films en series.
+- Onderin: Home, Live tv, Films, Series en Zoeken. Rechtsboven:
+  Favorieten (ster) en Instellingen.
+- Live tv: tik op een zender en hij speelt in het venster bovenin. Met
+  de knoppen in dat venster pauzeer je of ga je naar groot beeld (liggend).
+  Op groot beeld zit de pauzeknop links in de balk onderin.
+- Tijdens het kijken: tik op het beeld om de knoppen te tonen of te
+  verbergen. Met de knop linksboven ga je terug.
+- Live tv: veeg over het beeld naar links of rechts voor een andere zender.
+- Films en series: sleep over de voortgangsbalk, of tik twee keer links of
+  rechts op het beeld voor 10 seconden terug of vooruit.
+- Lang op een zender, film of serie drukken: favoriet aan of uit.
+- Groepen: tik op de knop "Groep: ..." bovenaan. Er schuift een lijst van
+  links in met Mijn groepen (zoals Verder kijken, Favorieten en Nieuw
+  toegevoegd) en de groepen van je provider. Veeg naar links om te sluiten.
+- Films en Series openen op Overzicht: een rij per groep. Met het pijltje
+  naast een rij zie je die hele groep.
+- Zenders, films en series speelt IBStv af met VLC, dat in de app zit.
+  Daardoor werken ook MKV, H.265 en AC3/DTS-geluid. Ondertitels uit het
+  bestand toont VLC zelf in beeld.
+
+GOED OM TE WETEN
+- Je login, favorieten en Verder kijken staan alleen op de iPhone.
+- Er zijn geen zenders of logins inbegrepen; je gebruikt je eigen
+  IPTV-abonnement.
+- Een nieuwe versie maak je door de bestanden in GitHub te vervangen.
+  Daarna bouwt GitHub de app vanzelf opnieuw.
