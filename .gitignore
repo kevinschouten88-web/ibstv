@@ -6,3 +6,9 @@ ios/*.xcworkspace
 ios/Podfile.lock
 ios/Payload/
 *.ipa
+android/app/src/main/assets/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+*.jks

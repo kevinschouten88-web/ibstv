@@ -73,6 +73,7 @@ body.v-settings #shade{background:rgba(8,11,24,.6)}
 .btn.ghost:hover{background:rgba(255,255,255,.2);filter:none}
 .btn.danger{background:rgba(255,79,100,.16);color:#FFC3CB;box-shadow:inset 0 0 0 1px rgba(255,79,100,.4)}
 .btn.small{padding:8px 14px;border-radius:12px;font-size:14px}
+a.btn{text-decoration:none;color:#0E1022}a.btn.ghost{color:var(--text)}
 
 /* ---------- Merk ---------- */
 .mark{display:inline-flex;align-items:center;gap:10px;font:800 21px/1 var(--display);letter-spacing:-.02em}
@@ -875,6 +876,7 @@ const CFG = window.IPTV || {};
 const VERSION = (UA.match(/IBStv(?:TV|Phone|iOS)\/([\d.]+)/) || [])[1] || '1.3.2';
 const IOS = /IBStviOS/.test(UA);
 const DEV = TV ? 'tv' : 'telefoon';
+const SITE = 'https://kevinschouten88-web.github.io/ibstv';   // privacybeleid en supportpagina
 const BASE = CFG.storagePrefix || 'iptv.';
 function gget(k, d){ try{ const v = localStorage.getItem(BASE + k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function gset(k, v){ try{ if(v === null) localStorage.removeItem(BASE + k); else localStorage.setItem(BASE + k, JSON.stringify(v)); }catch(e){} }
@@ -1801,9 +1803,14 @@ function renderSetPane(){
     case 'about':
       h = head('Over IBStv', 'Versie ' + VERSION) +
         grp('', row('Versie', '', `<span class="vl t">${VERSION}</span>`) +
-            row('Omzetprogramma (ffmpeg)', '', '<span class="vl" id="ffAbout">Controleren…</span>') +
-            row('Wat IBStv is', 'IBStv is een speler. Hij levert zelf geen zenders, films of series; die komen van je eigen IPTV-abonnement.', '')) +
-        '<p class="note" style="padding-left:4px">IBStv gebruikt open-source onderdelen: Electron, hls.js, mpegts.js, FFmpeg en de lettertypen Figtree en Bricolage Grotesque.</p>';
+            (NATIVE ? '' : row('Omzetprogramma (ffmpeg)', '', '<span class="vl" id="ffAbout">Controleren…</span>')) +
+            row('Wat IBStv is', 'IBStv is een speler. Hij levert zelf geen zenders, films of series; die komen van je eigen IPTV-abonnement.', '') +
+            row('Privacy', 'IBStv verzamelt geen gegevens. Je login en voortgang blijven op dit apparaat.', `<a class="btn small ghost" href="${SITE}/privacy.html" target="_blank" rel="noopener">Privacybeleid</a>`) +
+            row('Hulp en contact', '', `<a class="btn small ghost" href="${SITE}/" target="_blank" rel="noopener">Supportpagina</a>`)) +
+        `<p class="note" style="padding-left:4px">${IOS
+          ? 'IBStv gebruikt open-source onderdelen: VLCKit (LGPL 2.1, broncode op code.videolan.org), hls.js en mpegts.js (Apache 2.0) en de lettertypen Figtree en Bricolage Grotesque (SIL Open Font License).'
+          : NATIVE ? 'IBStv gebruikt open-source onderdelen: hls.js en mpegts.js (Apache 2.0) en de lettertypen Figtree en Bricolage Grotesque (SIL Open Font License).'
+          : 'IBStv gebruikt open-source onderdelen: Electron, hls.js, mpegts.js, FFmpeg en de lettertypen Figtree en Bricolage Grotesque.'}</p>`;
       break;
   }
   L.innerHTML = h;

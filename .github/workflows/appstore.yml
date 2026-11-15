@@ -1,0 +1,87 @@
+name: IBStv naar de App Store (TestFlight)
+
+# Handmatig starten: Actions > "IBStv naar de App Store (TestFlight)" > Run workflow.
+# Nodig (Settings > Secrets and variables > Actions):
+#   APPLE_TEAM_ID     Team ID van je Apple Developer-account (10 tekens)
+#   ASC_KEY_ID        Key ID van de App Store Connect API-sleutel
+#   ASC_ISSUER_ID     Issuer ID die bij die sleutel hoort
+#   ASC_PRIVATE_KEY   de inhoud van het .p8-bestand (alles, inclusief BEGIN/END-regels)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versie in de App Store (bijvoorbeeld 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  upload:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hulpmiddelen installeren
+        run: brew install xcodegen
+
+      - name: Speler in de app zetten
+        run: |
+          rm -rf ios/www && mkdir -p ios/www
+          cp -R app/index.html app/vendor app/fonts app/icon.png ios/www/
+
+      - name: Xcode-project maken
+        working-directory: ios
+        run: |
+          xcodegen generate
+          pod install --repo-update
+
+      - name: API-sleutel klaarzetten
+        env:
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          test -n "$ASC_KEY_ID" || { echo "::error::Geheim ASC_KEY_ID ontbreekt"; exit 1; }
+          echo "$ASC_PRIVATE_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Archief maken en ondertekenen
+        working-directory: ios
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -o pipefail
+          xcodebuild -workspace IBStv.xcworkspace -scheme IBStv -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/IBStv.xcarchive" archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic CODE_SIGN_IDENTITY="Apple Development" \
+            CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES \
+            MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION=$((100 + GITHUB_RUN_NUMBER)) | tail -n 60
+
+      - name: Naar App Store Connect sturen
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          set -o pipefail
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/IBStv.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" | tail -n 40
+          echo "Klaar. De build verschijnt na 5 tot 30 minuten in App Store Connect bij TestFlight."
