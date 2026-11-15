@@ -164,7 +164,7 @@ export default {
         if(!s) return json({episodes: {}});
         const eps = {};
         for(const e of episodes()) (eps[e.season] = eps[e.season] || []).push({id: e.id, episode_num: e.num, title: e.title, container_extension: 'mp4', season: e.season,
-          info: {plot: 'Een korte voorbeeldclip (Google, voor testdoeleinden).', duration: '00:00:15', movie_image: `${base}/img/poster/${s.id}.svg`}});
+          info: {plot: 'Een korte voorbeeldclip van Google, bedoeld om te testen.', movie_image: `${base}/img/poster/${s.id}.svg`}});
         return json({info: {name: s.name, plot: s.plot, cover: `${base}/img/poster/${s.id}.svg`}, episodes: eps,
           seasons: Object.keys(s.seasons).map(n => ({season_number: Number(n), name: 'Seizoen ' + n}))});
       }
