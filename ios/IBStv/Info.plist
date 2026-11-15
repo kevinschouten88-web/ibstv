@@ -27,9 +27,6 @@
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key><true/>
-		<key>NSAllowsArbitraryLoadsForMedia</key><true/>
-		<key>NSAllowsArbitraryLoadsInWebContent</key><true/>
-		<key>NSAllowsLocalNetworking</key><true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key><string>IBStv gebruikt het lokale netwerk als je IPTV-server bij jou thuis staat.</string>
 	<key>ITSAppUsesNonExemptEncryption</key><false/>
