@@ -1,6 +1,8 @@
 package nl.iptvspeler.tv;
 
 import android.app.Activity;
+import android.app.PictureInPictureParams;
+import android.util.Rational;
 import android.app.UiModeManager;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -46,7 +48,11 @@ public class MainActivity extends Activity {
     private WebView web;
     private NativePlayer player;
     private boolean tv;
-    static final String VERSION = "1.2.6";
+    static final String VERSION = "1.3.0";
+    private CastBridge cast;
+    // Beeld in beeld: speelt er iets, en in welke verhouding?
+    private volatile boolean playing;
+    private volatile int vidW = 16, vidH = 9;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -131,6 +137,10 @@ public class MainActivity extends Activity {
         player = new NativePlayer(this, surface);
         web.addJavascriptInterface(player, "IBSPlayer");
         web.addJavascriptInterface(new AppBridge(), "IBSApp");
+        if (!tv) {
+            cast = CastBridge.create(this);
+            if (cast != null) web.addJavascriptInterface(cast, "IBSCast");
+        }
         setContentView(root);
         web.requestFocus(View.FOCUS_DOWN);
         if (state == null || web.restoreState(state) == null) web.loadUrl(ORIGIN);
@@ -169,6 +179,53 @@ public class MainActivity extends Activity {
                 }
             } });
         }
+
+        /** Speelt er iets? Dan gaat de app bij wegvegen naar beeld in beeld. */
+        @android.webkit.JavascriptInterface public void setPlaying(final boolean on, final int w, final int h) {
+            if (tv) return;
+            playing = on;
+            if (w > 0 && h > 0) { vidW = w; vidH = h; }
+            runOnUiThread(new Runnable() { public void run() { updatePip(); } });
+        }
+    }
+
+    /* ---------- Beeld in beeld ---------- */
+
+    private boolean pipSupported() {
+        return !tv && Build.VERSION.SDK_INT >= 26 && getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE);
+    }
+
+    private PictureInPictureParams pipParams() {
+        float r = vidW / (float) vidH;
+        int w = vidW, h = vidH;
+        if (r > 2.39f) { w = 239; h = 100; } else if (r < 1 / 2.39f) { w = 100; h = 239; }
+        PictureInPictureParams.Builder b = new PictureInPictureParams.Builder().setAspectRatio(new Rational(w, h));
+        if (Build.VERSION.SDK_INT >= 31) { b.setAutoEnterEnabled(playing); b.setSeamlessResizeEnabled(true); }
+        return b.build();
+    }
+
+    private void updatePip() {
+        if (!pipSupported()) return;
+        try { setPictureInPictureParams(pipParams()); } catch (Exception ignored) {}
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        // Android 8 tot en met 11: zelf naar beeld in beeld gaan (vanaf 12 gaat dat vanzelf)
+        if (pipSupported() && playing && Build.VERSION.SDK_INT < 31) {
+            try { enterPictureInPictureMode(pipParams()); } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean inPip, Configuration cfg) {
+        super.onPictureInPictureModeChanged(inPip, cfg);
+        if (web != null) web.evaluateJavascript("window.pipMode && pipMode(" + inPip + ")", null);
+    }
+
+    private boolean inPip() {
+        return Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode();
     }
 
     /* ---------- Ingebouwde server ---------- */
@@ -302,16 +359,30 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
-        web.evaluateJavascript("try{video.pause()}catch(e){}", null);
-        if (player != null) player.onPause();
-        web.onPause();
+        // In beeld in beeld gewoon doorspelen
+        if (!inPip()) {
+            web.evaluateJavascript("try{video.pause()}catch(e){}", null);
+            if (player != null) player.onPause();
+            web.onPause();
+        }
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        // Venster van beeld in beeld weggeveegd: stoppen met afspelen
+        if (web != null && !isChangingConfigurations()) {
+            web.evaluateJavascript("try{video.pause()}catch(e){}", null);
+            if (player != null) player.onPause();
+        }
+        super.onStop();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         web.onResume();
+        if (cast != null) cast.resume();
     }
 
     @Override
@@ -322,6 +393,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (cast != null) cast.release();
         if (web != null) {
             if (player != null) player.destroy();
             web.destroy();

@@ -34,13 +34,13 @@ const LIVE_CATS = [{category_id: '1', category_name: 'Demo', parent_id: 0}, {cat
 // Films (Blender Foundation, CC BY)
 const MOVIES = [
   {id: 101, name: 'Big Buck Bunny', year: '2008', dur: '00:09:56', genre: 'Animatie, Komedie', rating: 7.2, cat: 10, file: 'BigBuckBunny.mp4', color: ['#5BA84A', '#F2D25C'],
-   plot: 'Een goedmoedig groot konijn neemt het op tegen drie pestende knaagdieren.'},
+   plot: 'Een goedmoedig groot konijn neemt het op tegen drie pestende knaagdieren.', director: 'Sacha Goedegebure', country: 'Nederland'},
   {id: 102, name: 'Elephants Dream', year: '2006', dur: '00:10:53', genre: 'Animatie, Sciencefiction', rating: 6.5, cat: 10, file: 'ElephantsDream.mp4', color: ['#7A4B2A', '#F08A3C'],
-   plot: 'Twee mannen dwalen door een vreemde, mechanische wereld die niet is wat ze denken.'},
+   plot: 'Twee mannen dwalen door een vreemde, mechanische wereld die niet is wat ze denken.', director: 'Bassam Kurdali', cast: 'Cas Jansen, Tygo Gernandt', country: 'Nederland'},
   {id: 103, name: 'Sintel', year: '2010', dur: '00:14:48', genre: 'Animatie, Avontuur', rating: 7.5, cat: 10, file: 'Sintel.mp4', color: ['#2F4F7F', '#9AD1FF'],
-   plot: 'Een jonge vrouw zoekt naar de kleine draak die ze ooit verzorgde.'},
+   plot: 'Een jonge vrouw zoekt naar de kleine draak die ze ooit verzorgde.', director: 'Colin Levy', cast: 'Halina Reijn, Thom Hoffman', country: 'Nederland'},
   {id: 104, name: 'Tears of Steel', year: '2012', dur: '00:12:14', genre: 'Sciencefiction', rating: 6.8, cat: 11, file: 'TearsOfSteel.mp4', color: ['#30343F', '#8FA3BF'],
-   plot: 'Een groep wetenschappers probeert Amsterdam te redden van robots uit de toekomst.'}
+   plot: 'Een groep wetenschappers probeert Amsterdam te redden van robots uit de toekomst.', director: 'Ian Hubert', cast: 'Derek de Lint, Sergio Hasselbaink, Vanja Rukavina', country: 'Nederland'}
 ];
 const VOD_CATS = [{category_id: '10', category_name: 'Animatie', parent_id: 0}, {category_id: '11', category_name: 'Sciencefiction', parent_id: 0}];
 
@@ -153,7 +153,7 @@ export default {
         const v = MOVIES.find(x => x.id === Number(q.get('vod_id')));
         if(!v) return json({info: [], movie_data: {}});
         return json({info: {name: v.name, plot: v.plot + ' ' + CREDIT, description: v.plot + ' ' + CREDIT, genre: v.genre, releasedate: v.year + '-01-01',
-          duration: v.dur, rating: String(v.rating), movie_image: `${base}/img/poster/${v.id}.svg`, cover_big: `${base}/img/poster/${v.id}.svg`},
+          duration: v.dur, rating: String(v.rating), director: v.director || '', cast: v.cast || '', country: v.country || '', movie_image: `${base}/img/poster/${v.id}.svg`, cover_big: `${base}/img/poster/${v.id}.svg`},
           movie_data: {stream_id: v.id, name: v.name, added: String(ADDED), category_id: String(v.cat), container_extension: 'mp4'}});
       }
       case 'get_series_categories': return json(SERIES_CATS);

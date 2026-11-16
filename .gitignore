@@ -12,3 +12,4 @@ android/app/build/
 android/build/
 android/local.properties
 *.jks
+!android/test-key.jks

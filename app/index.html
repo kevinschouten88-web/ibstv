@@ -770,6 +770,74 @@ body.phone.has-gbar #cats{padding:0;overflow:visible}
 .hhead h3 svg{width:18px;height:18px;color:var(--iris);flex:none}
 .hhead h3 small{font:500 13px var(--font);color:var(--muted)}
 
+
+/* ================= Filmpagina (zelfde opbouw als een serie) ================= */
+.mdet{display:flex;flex-direction:column;gap:12px}
+.mcard{border-radius:20px;padding:16px 18px;background:var(--glass);box-shadow:var(--edge)}
+.mcard h3{font:700 17px/1.2 var(--display);letter-spacing:-.01em;margin:0 0 8px}
+.mcard p{color:var(--soft);font-size:14.5px;line-height:1.55;margin:0}
+.mfacts{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;font-size:14px;margin:0}
+.mfacts dt{color:var(--muted)}
+.mfacts dd{margin:0;color:var(--soft);min-width:0}
+.mdet .hsec{margin-top:6px}
+#list.mdetail{display:block}
+#list.mdetail .ephead{margin-bottom:12px}
+body:not(.phone) .mdet{max-width:900px}
+/* ================= Kijk je nog? ================= */
+#stillBox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(500px,calc(100% - 40px));padding:28px 28px 24px;border-radius:30px;z-index:8;
+  background:var(--glass-deep);-webkit-backdrop-filter:blur(28px) saturate(170%);backdrop-filter:blur(28px) saturate(170%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 0 0 1px rgba(255,255,255,.1),0 40px 90px -30px rgba(0,0,0,.9);text-align:center;cursor:default}
+#stillBox .ring{width:74px;height:74px;margin:0 auto 14px;position:relative}
+#stillBox .ring svg{width:74px;height:74px;transform:rotate(-90deg)}
+#stillBox .ring circle{fill:none;stroke-width:5}
+#stillBox .ring .bgc{stroke:rgba(255,255,255,.14)}
+#stillBox .ring .fgc{stroke:var(--iris);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+#stillBox .ring b{position:absolute;inset:0;display:grid;place-items:center;font:800 22px var(--display)}
+#stillBox h3{font:800 30px/1.05 var(--display);letter-spacing:-.03em;margin:0 0 8px}
+#stillBox p{color:var(--soft);font-size:15px;margin:0 0 20px}
+#stillBox .rbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#stage.stillask video{filter:brightness(.35) blur(6px)}
+body.phone #stillBox{padding:24px 20px 20px;border-radius:26px}
+body.phone #stillBox h3{font-size:26px}
+body.phone #stillBox .rbtns .btn{flex:1}
+
+
+/* ================= Casten (Chromecast en AirPlay) ================= */
+#castSheet{position:fixed;inset:0;z-index:96;pointer-events:none}
+#castSheet .gscrim{position:absolute;inset:0;background:rgba(4,6,14,.55);opacity:0;transition:opacity .25s}
+#castSheet .csheet{position:absolute;left:0;right:0;bottom:0;max-height:80%;overflow:auto;padding:26px 18px calc(var(--sab) + 18px);border-radius:28px 28px 0 0;
+  background:rgba(14,17,36,.9);-webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+  transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+#castSheet .csheet::before{content:"";position:absolute;left:50%;top:9px;width:40px;height:5px;margin-left:-20px;border-radius:5px;background:rgba(255,255,255,.3)}
+#castSheet.open{pointer-events:auto}#castSheet.open .gscrim{opacity:1}#castSheet.open .csheet{transform:none}
+.csheet h2{font:800 23px/1.1 var(--display);letter-spacing:-.025em;margin:0 4px 4px}
+.csheet .csub{color:var(--muted);font-size:13.5px;margin:0 4px 14px}
+.cdev{display:flex;align-items:center;gap:14px;width:100%;padding:13px 12px;border-radius:16px;text-align:left;font-size:15px;font-weight:600;color:var(--soft)}
+.cdev .cic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:var(--edge);flex:none}
+.cdev .cic svg{width:22px;height:22px}
+.cdev small{display:block;color:var(--muted);font-weight:500;font-size:12.5px;margin-top:2px}
+.cdev .chk{margin-left:auto;width:22px;height:22px;color:var(--iris)}
+.cdev.on{background:rgba(150,134,255,.16);color:#fff;box-shadow:inset 0 0 0 1px rgba(150,134,255,.4)}
+.cdev.on .cic{background:var(--iris);color:#0E1022}
+.cdev.busy .chk{animation:spin .8s linear infinite}
+.csheet .cnote{color:var(--muted);font-size:12.5px;margin:12px 6px 0;line-height:1.45}
+#castNow{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:20px;
+  background:radial-gradient(60% 60% at 50% 40%,rgba(110,91,255,.35),transparent 70%),#080B18}
+#castNow .ci2{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:rgba(255,255,255,.1);box-shadow:var(--edge);margin-bottom:12px;color:var(--iris)}
+#castNow .ci2 svg{width:32px;height:32px}
+#castNow .cn1{color:var(--muted);font-size:13px}
+#castNow .cn2{font:800 22px/1.1 var(--display);letter-spacing:-.02em}
+#castNow .cn3{color:var(--soft);font-size:14px;margin:6px 0 14px;max-width:80%}
+body.casting #stage video{opacity:0}
+body.phone.bgvideo:not(.full) #castNow .ci2{width:44px;height:44px;margin-bottom:6px}
+body.phone.bgvideo:not(.full) #castNow .cn3,body.phone.bgvideo:not(.full) #castStop{display:none}
+
+/* ================= Beeld in beeld: alleen het beeld ================= */
+body.pip main,body.pip #rail,body.pip #topline,body.pip #osd,body.pip #topbar,body.pip #miniUi,body.pip #msg,body.pip #bg,body.pip #shade,
+body.pip #stillBox,body.pip #tracks,body.pip #resumeBox,body.pip #castSheet,body.pip #gdrawer,body.pip #natSub,body.pip #skipFx{display:none!important}
+body.pip #stage{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;aspect-ratio:auto!important;border-radius:0!important;z-index:100!important;opacity:1!important;box-shadow:none!important}
+body.pip #stage video{object-fit:contain}
+
 /* Telefoon dwars: alleen de speler, de rest blijft staand */
 @media (orientation:landscape){
   body.phone{--tabh:58px;--top:calc(var(--sat) + 52px)}
@@ -821,11 +889,13 @@ try{ if(Object.keys(localStorage).some(k => /^iptv\.(p\d+\.)?acc$/.test(k))) doc
     <video id="video" playsinline controlslist="nofullscreen noremoteplayback" disablepictureinpicture></video>
     <div class="idle"></div>
     <div id="natSub" class="hidden"></div>
-    <div id="miniUi"><span class="livepill"><i></i>Live</span><button class="ex" id="miniPP" type="button" aria-label="Pauze"></button><button class="ex" id="miniFull" type="button" aria-label="Groot beeld"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button></div>
+    <div id="miniUi"><span class="livepill"><i></i>Live</span><button class="ex" id="miniPP" type="button" aria-label="Pauze"></button><button class="ex hidden" id="miniCast" type="button" aria-label="Op een ander scherm kijken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M2 12a8 8 0 0 1 8 8M2 16a4 4 0 0 1 4 4"/><path d="M2 20h.01"/></svg></button><button class="ex" id="miniFull" type="button" aria-label="Groot beeld"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button></div>
     <div id="osd"></div>
-    <div id="topbar"><button id="backBtn" class="back" title="Terug (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Terug</button><span id="tbTitle"></span><button id="tracksBtn" class="tbbtn" title="Geluid en ondertitels (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 15h4M14 15h3M7 11h2M12 11h5"/></svg>Geluid en ondertitels</button></div>
+    <div id="topbar"><button id="backBtn" class="back" title="Terug (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Terug</button><span id="tbTitle"></span><button id="castBtn" class="tbbtn hidden" title="Op een ander scherm kijken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M2 12a8 8 0 0 1 8 8M2 16a4 4 0 0 1 4 4"/><path d="M2 20h.01"/></svg>Casten</button><button id="tracksBtn" class="tbbtn" title="Geluid en ondertitels (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 15h4M14 15h3M7 11h2M12 11h5"/></svg>Geluid en ondertitels</button></div>
     <div id="tracks" class="hidden" role="dialog" aria-label="Geluid en ondertitels"></div>
     <div id="resumeBox" class="hidden" role="dialog" aria-label="Verder kijken"></div>
+    <div id="castNow" class="hidden"><div class="ci2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M2 12a8 8 0 0 1 8 8M2 16a4 4 0 0 1 4 4"/><path d="M2 20h.01"/></svg></div><div class="cn1">Speelt af op</div><div class="cn2"></div><div class="cn3"></div><button class="btn ghost" id="castStop" type="button">Stoppen met casten</button></div>
+    <div id="stillBox" class="hidden" role="alertdialog" aria-label="Kijk je nog?"></div>
   </div>
   <div id="shade"></div>
   <div id="topline"><div class="mark"><i></i><span>IBS<em>tv</em></span></div><span id="clock" class="t"></span><div id="phBtns"><button data-view="fav" aria-label="Favorieten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg></button><button data-view="settings" aria-label="Instellingen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button></div></div>
@@ -1095,7 +1165,7 @@ $('#list').addEventListener('click', e => {
   if(RES[rkey(it)] || it.type === 'episode'){ playItem(it); return; }
   const kind = it.type;   // movie of series: naar de lijst, met deze titel gekozen
   S.cat[kind] = '__all'; S.spot[kind] = {id: it.id, top: 0, cat: '__all'};
-  setView(kind).then(() => { if(kind === 'series' && S.view === 'series') openSeries(it); });
+  setView(kind).then(() => { if(kind === 'series' && S.view === 'series') openSeries(it); else if(kind === 'movie' && S.view === 'movie') openMovie(it); });
 }, true);
 
 
@@ -1205,10 +1275,159 @@ $('#list').addEventListener('click', e => {
   const it = S.home[Number(el.dataset.h)]; if(!it) return;
   if(it.type === 'episode' || RES[rkey(it)]){ playItem(it); return; }
   if(it.type === 'series'){ openSeries(it); return; }
-  // film: naar de groep van de film, met de film gekozen
-  const G = S.grp; S.spot.movie = {id: it.id, top: 0, cat: it.cat};
-  G.active = it.cat; groupBar(G.kind, G.entries, G.active, G.onPick); G.onPick(it.cat); restoreSpot('movie');
+  openMovie(it);
 }, true);
+
+
+/* ---------- Filmpagina: net als bij een serie een eigen scherm ---------- */
+async function openMovie(it){
+  S.movieOpen = it; S.seriesOpen = null;
+  setAmbPoster(it.icon || ''); clearEpgQueue(); rowObs.disconnect(); listObs?.disconnect();
+  const L = $('#list'); L.className = 'eps mdetail'; L.scrollTop = 0;
+  S.type = 'moviedetail'; S.items = [it]; S.sel = 0; S.list = {ensure(){}};
+  showInfo(it);
+  const back = S.view === 'movie' ? 'Alle films' : 'Terug';
+  const paint = () => {
+    const x = S.vodInfo.get(it.id) || {};
+    const facts = [['Genre', x.genre || it.genre], ['Regie', x.director], ['Met', x.cast], ['Jaar', x.year || it.year],
+      ['Duur', x.duration ? fmtDur(x.duration) : ''], ['Land', x.country], ['Beoordeling', it.rating && Number(it.rating) ? '★ ' + String(it.rating).replace('.', ',') : '']].filter(f => f[1]);
+    const H = S.home = [];
+    const more = (S.movies || []).filter(m => m.cat === it.cat && m.id !== it.id).sort((a, b) => (b.added || 0) - (a.added || 0)).slice(0, 15);
+    const grp = (S.movieCats || []).find(c => String(c.category_id) === String(it.cat));
+    L.innerHTML = `<div class="ephead"><button class="back">${CHEV}${back}</button><h2>${esc(it.name)}</h2></div>
+      <div class="mdet">
+        ${x.plot ? `<div class="mcard"><h3>Over deze film</h3><p>${esc(x.plot)}</p></div>` : (S.vodInfo.has(it.id) ? '' : '<div class="mcard"><p>Informatie laden…</p></div>')}
+        ${facts.length ? `<div class="mcard"><dl class="mfacts">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></div>` : ''}
+        ${more.length ? `<section class="hsec"><div class="hhead"><h3>Meer uit ${esc(grp ? grp.category_name : 'deze groep')}</h3></div>
+          <div class="hrow">${more.map(m => hPoster(m, (H.push(m), H.length - 1))).join('')}</div></section>` : ''}
+      </div>`;
+  };
+  paint();
+  if(!S.vodInfo.get(it.id)?.full){
+    try{
+      const d = await api({action:'get_vod_info', vod_id: it.id}); const inf = d?.info || {};
+      S.vodInfo.set(it.id, {full: true, plot: inf.plot || inf.description || '', genre: inf.genre, duration: inf.duration,
+        year: (inf.releasedate || inf.release_date || '').slice(0, 4), director: inf.director, cast: inf.cast || inf.actors, country: inf.country});
+    }catch(e){ S.vodInfo.set(it.id, {full: true, plot: ''}); }
+    if(S.movieOpen === it){ paint(); showInfo(it); }
+  }
+}
+function closeMovie(){ S.movieOpen = null; S.reload?.(); }
+$('#list').addEventListener('click', e => {
+  if(S.type !== 'moviedetail') return;
+  e.stopImmediatePropagation();
+  if(e.target.closest('.back')){ closeMovie(); return; }
+  const el = e.target.closest('[data-h]'); if(el){ const m = S.home[Number(el.dataset.h)]; if(m) openMovie(m); }
+}, true);
+
+/* ---------- Kijk je nog? Na drie afleveringen achter elkaar ---------- */
+const STILL_AFTER = 3, STILL_WAIT = 60;
+S.epStreak = 0;
+['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, e => {
+  if(!e.isTrusted || $('#stillBox').contains(e.target)) return;
+  if(S.playing?.type === 'episode') S.epStreak = 1;   // wie iets aanraakt, kijkt nog
+}, true));
+function askStillWatching(nx){
+  const B = $('#stillBox'), st = $('#stage');
+  let n = STILL_WAIT, done = false;
+  const C = 2 * Math.PI * 33;
+  B.innerHTML = `<div class="ring"><svg viewBox="0 0 74 74"><circle class="bgc" cx="37" cy="37" r="33"/><circle class="fgc" cx="37" cy="37" r="33" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg><b class="t">${n}</b></div>
+    <h3>Kijk je nog?</h3><p>Je hebt ${STILL_AFTER} afleveringen achter elkaar gekeken. Doe je niets, dan stopt IBStv vanzelf.</p>
+    <div class="rbtns"><button class="btn" data-s="go">Verder kijken</button><button class="btn ghost" data-s="stop">Stoppen</button></div>`;
+  B.classList.remove('hidden'); st.classList.add('stillask'); osdHide?.();
+  const ring = B.querySelector('.fgc'), num = B.querySelector('.ring b');
+  const finish = go => {
+    if(done) return; done = true; clearInterval(t);
+    B.classList.add('hidden'); st.classList.remove('stillask');
+    if(go){ S.epStreak = 0; playItem(nx, {fromStart: true}); }
+    else { S.epStreak = 0; goBack(); showMsg('Gestopt omdat er niet meer gekeken werd.', 4000); }
+  };
+  const t = setInterval(() => {
+    if(PB.it?.id !== S.playing?.id || !document.body.classList.contains('full')){ done = true; clearInterval(t); B.classList.add('hidden'); st.classList.remove('stillask'); return; }
+    n--; num.textContent = n; ring.style.strokeDashoffset = String(C * (1 - n / STILL_WAIT));
+    if(n <= 0) finish(false);
+  }, 1000);
+  B.onclick = e => { e.stopPropagation(); const b = e.target.closest('[data-s]'); if(b) finish(b.dataset.s === 'go'); };
+  setTimeout(() => B.querySelector('[data-s="go"]').focus(), 30);
+}
+
+
+/* ---------- Casten naar Chromecast (Android en iPhone) en AirPlay (iPhone) ----------
+   De app zelf zoekt de apparaten en stuurt het beeld; deze code toont alleen de keuzes.
+   window.IBSCast komt van de iPhone- of Android-app. */
+const CAST_DEMO = /[?&]castdemo\b/.test(location.search);
+if(CAST_DEMO && !window.IBSCast){
+  const devs = [{id:'w', name:'Woonkamer', kind:'chromecast'}, {id:'s', name:'Slaapkamer-tv', kind:'chromecast'}, {id:'a', name:'Apple TV', kind:'airplay'}];
+  let on = null;
+  window.IBSCast = {devices: () => JSON.stringify(devs), connect: id => { on = devs.find(d => d.id === id); }, cast(){}, stop(){ on = null; }, current: () => on ? JSON.stringify(on) : ''};
+}
+const castOk = () => !!window.IBSCast && (PHONE || CAST_DEMO);
+function castUi(){
+  const ok = castOk() && !!S.playing;
+  $('#castBtn').classList.toggle('hidden', !ok);
+  $('#miniCast').classList.toggle('hidden', !ok);
+}
+const castCur = () => { try{ const c = IBSCast.current(); return c ? JSON.parse(c) : null; }catch(e){ return null; } };
+function openCast(){
+  if(!castOk()) return;
+  let D = $('#castSheet');
+  if(!D){
+    D = document.createElement('div'); D.id = 'castSheet';
+    D.innerHTML = '<div class="gscrim"></div><div class="csheet" role="dialog" aria-label="Op een ander scherm kijken"></div>';
+    document.body.appendChild(D);
+    D.querySelector('.gscrim').addEventListener('click', () => D.classList.remove('open'));
+  }
+  const devs = JSON.parse(IBSCast.devices() || '[]'), cur = castCur();
+  const TVI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2.5"/><path d="M8 21h8"/></svg>';
+  const PHI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>';
+  const CHK = '<svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
+  const row = (id, icon, name, sub, on) => `<button class="cdev${on ? ' on' : ''}" data-dev="${esc(id)}"><span class="cic">${icon}</span><span>${esc(name)}<small>${esc(sub)}</small></span>${on ? CHK : ''}</button>`;
+  D.querySelector('.csheet').innerHTML = `<h2>Kijken op een ander scherm</h2><p class="csub">Je ${DEV} wordt dan de afstandsbediening.</p>
+    ${row('', PHI, 'Deze ' + DEV, 'Hier afspelen', !cur)}
+    ${devs.map(d => row(d.id, TVI, d.name, d.kind === 'airplay' ? 'AirPlay' : 'Chromecast', cur && cur.id === d.id)).join('')}
+    ${devs.length ? '' : '<p class="cnote">Zoeken naar apparaten…</p>'}
+    <p class="cnote">Zie je je tv niet? Zet hem aan en zorg dat hij op hetzelfde wifi-netwerk zit als je ${DEV}.</p>`;
+  D.querySelectorAll('.cdev').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.dev;
+    if(!id){ castStop(); D.classList.remove('open'); return; }
+    IBSCast.connect(id); D.classList.remove('open'); castStart();
+  }));
+  requestAnimationFrame(() => D.classList.add('open'));
+}
+const castImg = u => { const m = String(u || '').match(/[?&]url=([^&]+)/); return m ? decodeURIComponent(m[1]) : (/^https?:/.test(u || '') ? u : ''); };
+function castUrl(it){
+  if(it.type !== 'live') return streamUrl(it);
+  const a = S.acc; return `${a.server}/live/${encodeURIComponent(a.user)}/${encodeURIComponent(a.pass)}/${it.id}.m3u8`;
+}
+function castStart(){
+  const it = S.playing, d = castCur(); if(!it || !d) return;
+  const t = curT();
+  if(d.kind !== 'airplay'){
+    try{ IBSCast.cast(castUrl(it), it.type === 'episode' ? `${it.series} · ${it.name}` : it.name, castImg(it.type === 'episode' ? (it.seriesIcon || it.icon) : it.icon), it.type === 'live', it.type === 'live' ? 0 : (t || 0)); }catch(e){}
+    if(PB.nat){ try{ IBSPlayer.pause(); }catch(e){} } else video.pause();
+  }
+  document.body.classList.add('casting');
+  $('#castNow .cn2').textContent = d.name;
+  $('#castNow .cn3').textContent = it.type === 'episode' ? `${it.series} · ${it.name}` : it.name;
+  $('#castNow').classList.remove('hidden');
+}
+function castStop(fromDevice){
+  if(!fromDevice) try{ IBSCast.stop(); }catch(e){}
+  document.body.classList.remove('casting'); $('#castNow').classList.add('hidden');
+  if(PB.nat){ try{ IBSPlayer.resume(); }catch(e){} } else if(S.playing) video.play().catch(() => {});
+}
+$('#castBtn').addEventListener('click', e => { e.stopPropagation(); openCast(); });
+$('#miniCast').addEventListener('click', e => { e.stopPropagation(); openCast(); });
+$('#castStop').addEventListener('click', e => { e.stopPropagation(); castStop(); });
+// Is het casten ergens anders begonnen of gestopt (melding van de telefoon, AirPlay-knop)? Dan het scherm bijwerken.
+setInterval(() => {
+  if(!castOk()) return;
+  castUi();
+  const c = castCur(), on = document.body.classList.contains('casting');
+  if(c && !on && S.playing){
+    if(c.kind === 'airplay'){ document.body.classList.add('casting'); $('#castNow .cn2').textContent = c.name; $('#castNow .cn3').textContent = S.playing.name; $('#castNow').classList.remove('hidden'); }
+  }else if(!c && on) castStop(true);
+}, 1500);
 
 /* ---------- Views ---------- */
 document.querySelectorAll('#rail button, #phBtns button').forEach(b => b.addEventListener('click', () => {
@@ -2039,6 +2258,7 @@ $('#list').addEventListener('click', e => {
     else { select(i, {scroll:false}); playItem(it); }
   }else if(it.type === 'series'){ select(i, {scroll:false}); openSeries(it); }
   else if(it.type === 'episode' && S.type !== 'resume'){ select(i, {scroll:false}); playItem(it); }
+  else if(it.type === 'movie' && !TV && S.type !== 'resume'){ select(i, {scroll:false}); openMovie(it); }
   else { if(S.sel === i) playItem(it); else select(i, {scroll:false}); }
 });
 // Telefoon: zender, film of serie lang indrukken = favoriet
@@ -2202,7 +2422,7 @@ function showInfo(it){
       api({action:'get_vod_info', vod_id: it.id}).then(d => {
         const inf = d?.info || {};
         S.vodInfo.set(it.id, {plot: inf.plot || inf.description || '', genre: inf.genre, duration: inf.duration, year: (inf.releasedate || inf.release_date || '').slice(0, 4)});
-        if(S.items[S.sel]?.id === it.id && (S.type === 'movie' || S.type === 'resume' || S.type === 'search')) showInfo(it);
+        if(S.items[S.sel]?.id === it.id && (S.type === 'movie' || S.type === 'resume' || S.type === 'search' || S.type === 'moviedetail')) showInfo(it);
       }).catch(() => S.vodInfo.set(it.id, {plot: ''}));
     }, 250);
   }
@@ -2439,7 +2659,7 @@ function natUrls(it, live){
   if(!live) return [streamUrl(it)];
   const a = S.acc, u = encodeURIComponent(a.user), p = encodeURIComponent(a.pass);
   const m = `${a.server}/live/${u}/${p}/${it.id}.m3u8`, t = `${a.server}/live/${u}/${p}/${it.id}.ts`;
-  return IOS ? [t, m] : [m, t];
+  return [m, t];
 }
 function natStart(it, at, live, urlIdx = 0){
   stopVideo();
@@ -2844,6 +3064,7 @@ video.addEventListener('error', () => { if(video.getAttribute('src') || hls || m
 function hideMsgIfError(){ const m = $('#msg'); if(m.dataset.sticky || m.textContent.startsWith('Geluid') || m.textContent.includes('zet hem nu om')) return; hideMsg(); }
 
 function playItem(it, opts = {}){
+  if(it && it.type === 'episode') S.epStreak = 1;
   saveProgress(true);
   hideResume();
   S.playing = it;
@@ -2891,14 +3112,14 @@ function playItem(it, opts = {}){
 function updateBg(){
   const on = S.view === 'live' && !!S.playing && S.playing.type === 'live' && !!PB.it;
   document.body.classList.toggle('bgvideo', on);
-  natLayout(); liveUi();
+  natLayout(); liveUi(); castUi(); hostPlaying();
 }
 // Telefoon-app: het beeld van de ingebouwde speler in het venster bovenin plaatsen
 function natLayout(){
   const B = $('#bg'), H = $('#shade');
   let clip = '';
   if(PB.nat && window.IBSPlayer && IBSPlayer.layout){
-    const mini = PHONE && document.body.classList.contains('bgvideo') && !document.body.classList.contains('full');
+    const mini = PHONE && document.body.classList.contains('bgvideo') && !document.body.classList.contains('full') && !document.body.classList.contains('pip');
     if(mini){
       const r = $('#stage').getBoundingClientRect();
       try{ IBSPlayer.layout(r.left, r.top, r.width, r.height, innerWidth); }catch(e){}
@@ -2909,6 +3130,18 @@ function natLayout(){
   B.style.clipPath = H.style.clipPath = clip;
 }
 function hostFull(on){ try{ window.IBSApp && IBSApp.immersive(!!on); }catch(e){} }
+// Beeld in beeld: de telefoon weet zo of er iets speelt (dan gaat de app bij wegvegen naar een klein venster)
+function hostPlaying(){
+  const on = !!S.playing && !!PB.it;
+  const w = (PB.nat && PB.nat.st.w) || video.videoWidth || 16, h = (PB.nat && PB.nat.st.h) || video.videoHeight || 9;
+  try{ window.IBSApp && IBSApp.setPlaying && IBSApp.setPlaying(on, w, h); }catch(e){}
+}
+setInterval(hostPlaying, 5000);
+window.pipMode = function(on){
+  document.body.classList.toggle('pip', !!on);
+  if(on){ openTracks(false); osdHide(); }
+  natLayout();
+};
 addEventListener('resize', () => setTimeout(natLayout, 60));
 // Volgende aflevering automatisch starten
 video.addEventListener('ended', () => { if(!PB.vc) onVideoEnded(); });
@@ -2918,10 +3151,11 @@ function onVideoEnded(){
   if(!SET.autoNext || !it || it.type !== 'episode' || !Array.isArray(S.epList)) return;
   const i = S.epList.findIndex(x => x.id === it.id), nx = S.epList[i + 1];
   if(!nx) return;
+  if(S.epStreak >= STILL_AFTER){ askStillWatching(nx); return; }
   let n = 10;
   const tick = () => {
     if(PB.it !== it || !isEnded() || !document.body.classList.contains('full')) { hideMsg(); return; }
-    if(n <= 0){ hideMsg(); playItem(nx, {fromStart: true}); return; }
+    if(n <= 0){ hideMsg(); const k = S.epStreak; playItem(nx, {fromStart: true}); S.epStreak = k + 1; return; }
     showMsg(`Volgende aflevering over ${n} seconden: ${nx.name}. Druk op Esc om te stoppen.`, 0, true);
     n--; setTimeout(tick, 1000);
   };
@@ -3474,10 +3708,12 @@ window.appBack = function(){
   if(groupsOpen()){ closeGroups(); return true; }
   if(!$('#dlg').classList.contains('hidden')){ $('#dlg').click(); return true; }
   if(!$('#tracks').classList.contains('hidden')){ openTracks(false); return true; }
+  if(!$('#stillBox').classList.contains('hidden')){ $('#stillBox [data-s="stop"]').click(); return true; }
   if(!$('#resumeBox').classList.contains('hidden') || document.body.classList.contains('full')){ goBack(); return true; }
   if(!$('#login').classList.contains('hidden')) return false;
   if(document.activeElement && document.activeElement.matches('input')){ document.activeElement.blur(); return true; }
   if(S.type === 'episode'){ S.seriesOpen = null; S.reload?.(); return true; }
+  if(S.type === 'moviedetail'){ closeMovie(); return true; }
   if(S.view === 'settings' && S.setOpen){ S.setOpen = false; settingsView(); return true; }
   const homeV = PHONE ? 'home' : 'live';
   if(S.view !== homeV){ setView(homeV); return true; }

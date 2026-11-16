@@ -41,7 +41,7 @@ jobs:
             echo "$KEY_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
             echo "UPLOAD_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
           else
-            echo "Geen uploadsleutel: de app wordt niet ondertekend."
+            echo "Geen uploadsleutel: ondertekend met de testsleutel (niet voor Google Play)."
           fi
 
       - name: Bouwen (AAB voor Google Play en APK om zelf te installeren)
