@@ -829,6 +829,7 @@ body.phone #stillBox .rbtns .btn{flex:1}
 #castNow .cn2{font:800 22px/1.1 var(--display);letter-spacing:-.02em}
 #castNow .cn3{color:var(--soft);font-size:14px;margin:6px 0 14px;max-width:80%}
 body.casting #stage video{opacity:0}
+body.casting #osd{display:none!important}
 body.phone.bgvideo:not(.full) #castNow .ci2{width:44px;height:44px;margin-bottom:6px}
 body.phone.bgvideo:not(.full) #castNow .cn3,body.phone.bgvideo:not(.full) #castStop{display:none}
 
@@ -1411,10 +1412,26 @@ function castStart(){
   $('#castNow .cn3').textContent = it.type === 'episode' ? `${it.series} · ${it.name}` : it.name;
   $('#castNow').classList.remove('hidden');
 }
+const castActive = () => castOk() && document.body.classList.contains('casting') && (castCur() || {}).kind === 'chromecast';
+function castPlay(it, opts = {}){
+  stopVideo(); PB = {it, cast: true};
+  const r = isVod(it) && SET.resume ? getResume(it) : null;
+  const at = opts.fromStart ? 0 : (opts.resumeAt ?? (r ? r.t : 0));
+  try{ IBSCast.cast(castUrl(it), it.type === 'episode' ? `${it.series} · ${it.name}` : it.name, castImg(it.type === 'episode' ? (it.seriesIcon || it.icon) : it.icon), it.type === 'live', it.type === 'live' ? 0 : at); }catch(e){}
+  $('#castNow .cn3').textContent = it.type === 'episode' ? `${it.series} · ${it.name}` : it.name;
+  $('#castNow').classList.remove('hidden');
+  $('#stage').classList.add('has');
+  if(it.type !== 'live') enterFull();
+  updateBg(); renderOsd();
+  if(S.items[S.sel] === it) showInfo(it);
+  showMsg(`Naar ${(castCur() || {}).name || 'de tv'}: ${it.name}`, 2500);
+}
 function castStop(fromDevice){
   if(!fromDevice) try{ IBSCast.stop(); }catch(e){}
   document.body.classList.remove('casting'); $('#castNow').classList.add('hidden');
-  if(PB.nat){ try{ IBSPlayer.resume(); }catch(e){} } else if(S.playing) video.play().catch(() => {});
+  if(PB.nat){ try{ IBSPlayer.resume(); }catch(e){} }
+  else if(S.playing && PB.cast){ const it = S.playing; S.playing = null; playItem(it); }   // na casten weer hier verder
+  else if(S.playing) video.play().catch(() => {});
 }
 $('#castBtn').addEventListener('click', e => { e.stopPropagation(); openCast(); });
 $('#miniCast').addEventListener('click', e => { e.stopPropagation(); openCast(); });
@@ -3077,6 +3094,8 @@ function playItem(it, opts = {}){
   }
   document.querySelectorAll('#list .row.playing').forEach(x => x.classList.remove('playing'));
   if(S.type === 'live') $('#list').querySelectorAll(`.row[data-id="${it.id}"]`).forEach(r => r.classList.add('playing'));
+  // Aan het casten? Dan wordt de telefoon de afstandsbediening: alles gaat meteen naar de tv.
+  if(castActive()){ castPlay(it, opts); return; }
   const r = SET.resume && isVod(it) && !opts.fromStart && opts.resumeAt === undefined ? getResume(it) : null;
   if(r){
     stopVideo(); PB = {it: null};
