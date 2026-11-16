@@ -35,7 +35,8 @@ jobs:
           xcodebuild -workspace IBStv.xcworkspace -scheme IBStv -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build | tail -n 80
+            build > build.log 2>&1 || { grep -E "error:|fatal error|The following build commands failed" -A3 build.log | head -n 120; exit 1; }
+          tail -n 20 build.log
 
       - name: IPA maken
         working-directory: ios
