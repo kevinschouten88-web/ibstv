@@ -7,6 +7,7 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
     private var web: WKWebView!
     private let videoView = UIView()
     private var bridge: PlayerBridge!
+    private var cast: CastBridge?
     private let handler = SchemeHandler()
     private var immersive = false
 
@@ -33,7 +34,17 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
         layout: function(x, y, w, h, vw){ post('layout', [x, y, w, h, vw]); },
         state: function(){ return JSON.stringify(st); }
       };
-      window.IBSApp = { immersive: function(on){ post('immersive', [!!on]); } };
+      window.IBSApp = { immersive: function(on){ post('immersive', [!!on]); }, setPlaying: function(){} };
+      // Casten: Chromecast en AirPlay. De iPhone-app stuurt de lijst via __ibsCast.
+      var cast = {devices: [], current: null};
+      window.__ibsCast = function(s){ if(s) cast = s; };
+      window.IBSCast = {
+        devices: function(){ return JSON.stringify(cast.devices || []); },
+        current: function(){ return cast.current ? JSON.stringify(cast.current) : ''; },
+        connect: function(id){ post('castConnect', [String(id)]); },
+        cast: function(u, title, img, live, at){ post('castLoad', [String(u), String(title || ''), String(img || ''), !!live, at || 0]); },
+        stop: function(){ post('castStop'); }
+      };
     })();
     """
 
@@ -77,6 +88,12 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
         bridge = PlayerBridge(videoView: videoView)
         bridge.web = web
         bridge.onLayout = { [weak self] in self?.view.setNeedsLayout() }
+        view.insertSubview(bridge.routePicker, belowSubview: web)
+
+        let c = CastBridge()
+        c.web = web
+        c.player = bridge
+        cast = c
 
         NotificationCenter.default.addObserver(self, selector: #selector(willResign),
                                                name: UIApplication.willResignActiveNotification, object: nil)
@@ -91,7 +108,7 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
     }
 
     @objc private func willResign() {
-        bridge.pauseForBackground()
+        bridge.appWillResign()
         web.evaluateJavaScript("try{video.pause()}catch(e){}", completionHandler: nil)
     }
 
@@ -132,6 +149,7 @@ final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavig
             applyOrientation()
             return
         }
+        if cmd.hasPrefix("cast") { cast?.handle(cmd, a); return }
         bridge.handle(cmd, a, sid: sid)
         if cmd == "layout" { view.setNeedsLayout(); view.layoutIfNeeded() }
     }

@@ -4,6 +4,7 @@ project 'IBStv.xcodeproj'
 target 'IBStv' do
   use_frameworks!
   pod 'MobileVLCKit', '~> 3.6.0'
+  pod 'google-cast-sdk', '~> 4.8'
 end
 
 post_install do |installer|

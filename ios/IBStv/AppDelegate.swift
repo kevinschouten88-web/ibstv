@@ -1,5 +1,6 @@
 import UIKit
 import AVFoundation
+import GoogleCast
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -10,6 +11,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // Geluid ook als de stille modus aan staat.
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [])
         try? AVAudioSession.sharedInstance().setActive(true)
+
+        // Chromecast
+        CastBridge.setUp()
 
         let w = UIWindow(frame: UIScreen.main.bounds)
         w.backgroundColor = UIColor(red: 8 / 255, green: 11 / 255, blue: 24 / 255, alpha: 1)
