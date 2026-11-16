@@ -139,7 +139,10 @@ final class PlayerBridge: NSObject, AVPictureInPictureControllerDelegate {
 
     private func play(url: String, start: Double, audio: Int32) {
         stopEngines()
-        guard let u = URL(string: url) else { state = "error"; push(); return }
+        // "#vlc" aan het eind: de app vraagt om VLC (de Apple-speler kon dit formaat niet aan)
+        var s = url, forceVlc = false
+        if s.hasSuffix("#vlc") { forceVlc = true; s = String(s.dropLast(4)) }
+        guard let u = URL(string: s) else { state = "error"; push(); return }
         state = "preparing"
         picked = false
         pendingAudio = audio
@@ -147,7 +150,7 @@ final class PlayerBridge: NSObject, AVPictureInPictureControllerDelegate {
         startedAt = Date()
         userPaused = false
         videoView.isHidden = false
-        if PlayerBridge.usesApplePlayer(u) { playAv(u, start: start) } else { playVlc(u, start: start) }
+        if !forceVlc && PlayerBridge.usesApplePlayer(u) { playAv(u, start: start) } else { playVlc(u, start: start) }
         startTimer()
         push()
     }

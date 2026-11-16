@@ -946,6 +946,8 @@ const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const CFG = window.IPTV || {};
 const VERSION = (UA.match(/IBStv(?:TV|Phone|iOS)\/([\d.]+)/) || [])[1] || '1.3.2';
 const IOS = /IBStviOS/.test(UA);
+// iPhone en de Android-app spelen alles met hun eigen speler (die het formaat zelf herkent)
+const NATALL = IOS || /IBStv(TV|Phone)\//.test(UA);
 const DEV = TV ? 'tv' : 'telefoon';
 const SITE = 'https://kevinschouten88-web.github.io/ibstv';   // privacybeleid en supportpagina
 const BASE = CFG.storagePrefix || 'iptv.';
@@ -2672,11 +2674,16 @@ async function vodConvert(it, at, why){
 const NATIVE = (TV || PHONE) && !!window.IBSPlayer;
 const NATLIVE = load('natLive', {});
 let natTimer = null;
+// Welke adressen en spelers de app achter elkaar probeert. Lukt de eerste niet (ander formaat, geen beeld),
+// dan schakelt hij vanzelf door naar de volgende. Op de iPhone betekent "#vlc": speel dit met VLC.
 function natUrls(it, live){
-  if(!live) return [streamUrl(it)];
+  if(!live){
+    const u = streamUrl(it);
+    return IOS && /\.(mp4|m4v|mov)$/i.test(u) ? [u, u + '#vlc'] : [u];
+  }
   const a = S.acc, u = encodeURIComponent(a.user), p = encodeURIComponent(a.pass);
   const m = `${a.server}/live/${u}/${p}/${it.id}.m3u8`, t = `${a.server}/live/${u}/${p}/${it.id}.ts`;
-  return [m, t];
+  return IOS ? [m, t, m + '#vlc'] : [m, t];
 }
 function natStart(it, at, live, urlIdx = 0){
   stopVideo();
@@ -2714,6 +2721,7 @@ function natPoll(sid){
     $('#stage').classList.remove('loading');
     if(n.urlIdx + 1 < n.urls.length){ natStart(PB.it, PB.wantAt, PB.live, n.urlIdx + 1); return; }
     if(PB.live){ delete NATLIVE[PB.it.id]; store('natLive', NATLIVE); showMsg('Deze zender start niet. Mogelijk is hij op dit moment offline.', 0, true); }
+    else if(st.error === 'VIDEO_UNSUPPORTED') showMsg(`Het beeld van dit bestand gebruikt een formaat dat je ${DEV} niet kan tonen (bijvoorbeeld H.265 op een ouder toestel).`, 0, true);
     else showMsg(`Dit bestand kan je ${DEV} niet afspelen. Mogelijk gebruikt het een formaat dat niet wordt ondersteund, of staat het niet meer bij je provider.`, 0, true);
     return;
   }
@@ -3109,7 +3117,7 @@ function playItem(it, opts = {}){
     enterFull();
     return;
   }
-  if(NATIVE && it.type === 'live' && (NATLIVE[it.id] || IOS)){
+  if(NATIVE && it.type === 'live' && (NATLIVE[it.id] || NATALL)){
     natStart(it, 0, true);
     video.controls = false; renderOsd(); osdShow(); updateBg();
     if(S.items[S.sel] === it) showInfo(it);

@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private NativePlayer player;
     private boolean tv;
-    static final String VERSION = "1.3.0";
+    static final String VERSION = "1.4.0";
     private CastBridge cast;
     // Beeld in beeld: speelt er iets, en in welke verhouding?
     private volatile boolean playing;

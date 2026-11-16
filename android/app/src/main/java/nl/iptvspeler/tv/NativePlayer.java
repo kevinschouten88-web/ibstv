@@ -1,73 +1,84 @@
 package nl.iptvspeler.tv;
 
 import android.app.Activity;
-import android.media.MediaPlayer;
-import android.media.TimedText;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
-import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.widget.FrameLayout;
 
-import java.util.HashMap;
-import java.util.Map;
+import androidx.media3.common.C;
+import androidx.media3.common.Format;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
+import androidx.media3.common.TrackSelectionOverride;
+import androidx.media3.common.Tracks;
+import androidx.media3.common.VideoSize;
+import androidx.media3.common.text.Cue;
+import androidx.media3.common.text.CueGroup;
+import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
+import androidx.media3.extractor.DefaultExtractorsFactory;
+import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory;
+
+import java.util.List;
 
 /**
- * De ingebouwde videospeler van de tv (Android MediaPlayer).
- * Speelt films en afleveringen af die de WebView zelf niet kan tonen,
- * zoals MKV, H.265 en Dolby-geluid. Het beeld komt op een SurfaceView
- * onder de doorzichtige WebView, zodat de IBStv-bediening erover blijft.
- *
- * JavaScript gebruikt dit als window.IBSPlayer.
+ * De ingebouwde speler van Android (Media3 / ExoPlayer).
+ * Herkent zelf het formaat aan de inhoud (HLS, MPEG-TS, MKV, MP4, ...), dus niet alleen aan de naam.
+ * Geluid dat het toestel zelf niet kan (AC3, E-AC3, DTS, TrueHD) wordt door FFmpeg gedecodeerd.
+ * Het beeld komt op een SurfaceView onder de doorzichtige WebView.
+ * JavaScript gebruikt dit als window.IBSPlayer (zelfde functies als eerst).
  */
-public final class NativePlayer implements SurfaceHolder.Callback {
+@androidx.annotation.OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)
+public final class NativePlayer {
     private final Activity act;
     private final SurfaceView surface;
-    private MediaPlayer mp;
-    private boolean surfaceReady;
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private ExoPlayer exo;
 
     // Toestand, gelezen vanuit JavaScript via state().
     private volatile String state = "idle"; // idle, preparing, playing, paused, ended, error
     private volatile String error = "";
     private volatile int width, height;
-    private volatile int duration;          // ms
+    private volatile long durationMs, positionMs;
     private volatile boolean buffering;
     private volatile String subText = "";
     private volatile String tracksJson = "[]";
+    private volatile int audioSel = -1;
     private volatile int session;
+    private boolean started;
+    private int pendingAudio = -1;
 
     // Plaats van het beeld (telefoon: venster bovenin). Leeg = hele scherm.
     private float boxX, boxY, boxW, boxH, boxVw;
 
-    private String pendingUrl;
-    private int pendingStartMs;
-    private int pendingAudio = -1;
-
     public NativePlayer(Activity act, SurfaceView surface) {
         this.act = act;
         this.surface = surface;
-        surface.getHolder().addCallback(this);
+        main.post(tick);
     }
 
-    /* ---------- Oppervlak ---------- */
-
-    @Override public void surfaceCreated(SurfaceHolder h) {
-        surfaceReady = true;
-        if (mp != null) mp.setDisplay(h);
-        if (pendingUrl != null) {
-            String u = pendingUrl; pendingUrl = null;
-            open(u, pendingStartMs, pendingAudio);
+    /** Positie bijhouden (ExoPlayer mag alleen op de hoofdthread gevraagd worden). */
+    private final Runnable tick = new Runnable() {
+        public void run() {
+            if (exo != null) {
+                positionMs = Math.max(0, exo.getCurrentPosition());
+                long d = exo.getDuration();
+                durationMs = d == C.TIME_UNSET || exo.isCurrentMediaItemLive() ? 0 : Math.max(0, d);
+            }
+            main.postDelayed(this, 250);
         }
-    }
-    @Override public void surfaceChanged(SurfaceHolder h, int f, int w, int hh) { fit(); }
-    @Override public void surfaceDestroyed(SurfaceHolder h) {
-        surfaceReady = false;
-        if (mp != null) { try { mp.setDisplay(null); } catch (Exception ignored) {} }
-    }
+    };
 
-    /** Beeld passend in het scherm, met zwarte balken waar nodig. */
+    /* ---------- Beeld ---------- */
+
     private void fit() {
         View parent = (View) surface.getParent();
         if (parent == null || width <= 0 || height <= 0) return;
@@ -75,7 +86,7 @@ public final class NativePlayer implements SurfaceHolder.Callback {
         if (pw <= 0 || ph <= 0) return;
         float bx = 0, by = 0, bw = pw, bh = ph;
         if (boxW > 0 && boxH > 0 && boxVw > 0) {
-            float k = pw / boxVw;              // CSS-pixels naar schermpixels
+            float k = pw / boxVw;
             bx = boxX * k; by = boxY * k; bw = boxW * k; bh = boxH * k;
         }
         float scale = Math.min(bw / (float) width, bh / (float) height);
@@ -89,89 +100,123 @@ public final class NativePlayer implements SurfaceHolder.Callback {
     /* ---------- Afspelen ---------- */
 
     private void release() {
-        if (mp != null) {
-            try { mp.reset(); } catch (Exception ignored) {}
-            try { mp.release(); } catch (Exception ignored) {}
-            mp = null;
+        if (exo != null) {
+            try { exo.release(); } catch (Exception ignored) {}
+            exo = null;
         }
     }
 
-    private void open(final String url, final int startMs, final int audioIdx) {
+    private void open(String url, long startMs, int audioIdx) {
         release();
         final int my = ++session;
         state = "preparing"; error = ""; buffering = true; subText = ""; tracksJson = "[]";
-        width = 0; height = 0; duration = 0;
+        width = 0; height = 0; durationMs = 0; positionMs = 0; audioSel = -1; started = false; pendingAudio = audioIdx;
         surface.setVisibility(View.VISIBLE);
-        if (!surfaceReady) { pendingUrl = url; pendingStartMs = startMs; pendingAudio = audioIdx; return; }
         try {
-            mp = new MediaPlayer();
-            Map<String, String> headers = new HashMap<String, String>();
-            headers.put("User-Agent", ProxyCore.UA);
-            mp.setDataSource(act, Uri.parse(url), headers);
-            mp.setDisplay(surface.getHolder());
-            mp.setScreenOnWhilePlaying(true);
-            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                public void onPrepared(MediaPlayer p) {
+            DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
+                    .setUserAgent(ProxyCore.UA)
+                    .setAllowCrossProtocolRedirects(true)
+                    .setConnectTimeoutMs(15000)
+                    .setReadTimeoutMs(20000);
+            // Formaat aan de inhoud herkennen; ook losse .ts-streams zonder keyframe-markering
+            DefaultExtractorsFactory ex = new DefaultExtractorsFactory()
+                    .setTsExtractorFlags(DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES
+                            | DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS)
+                    .setConstantBitrateSeekingEnabled(true);
+            DefaultMediaSourceFactory msf = new DefaultMediaSourceFactory(http, ex);
+            DefaultRenderersFactory rf = new DefaultRenderersFactory(act)
+                    .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+                    .setEnableDecoderFallback(true);
+            exo = new ExoPlayer.Builder(act, rf).setMediaSourceFactory(msf).build();
+            exo.setVideoSurfaceView(surface);
+            exo.addListener(new Player.Listener() {
+                @Override public void onPlaybackStateChanged(int s) {
                     if (my != session) return;
-                    duration = Math.max(0, p.getDuration());
-                    readTracks();
-                    if (audioIdx >= 0) selectTrackSafe(audioIdx);
-                    if (startMs > 0) p.seekTo(startMs);
-                    p.start();
-                    state = "playing"; buffering = false;
+                    if (s == Player.STATE_BUFFERING) buffering = true;
+                    else if (s == Player.STATE_READY) {
+                        buffering = false;
+                        if (!started) { started = true; if (pendingAudio >= 0) selectTrackSafe(pendingAudio); }
+                        state = exo.getPlayWhenReady() ? "playing" : "paused";
+                    } else if (s == Player.STATE_ENDED) { buffering = false; state = "ended"; }
+                }
+                @Override public void onPlayWhenReadyChanged(boolean pwr, int reason) {
+                    if (my != session || exo == null) return;
+                    if (exo.getPlaybackState() == Player.STATE_READY) state = pwr ? "playing" : "paused";
+                }
+                @Override public void onPlayerError(PlaybackException e) {
+                    if (my != session) return;
+                    // Live stream die even hapert: opnieuw aanhaken in plaats van stoppen
+                    if (e.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW && exo != null) {
+                        exo.seekToDefaultPosition(); exo.prepare(); return;
+                    }
+                    state = "error"; error = e.getErrorCodeName(); buffering = false;
+                }
+                @Override public void onVideoSizeChanged(VideoSize v) {
+                    if (v.width > 0 && v.height > 0) {
+                        width = Math.round(v.width * (v.pixelWidthHeightRatio > 0 ? v.pixelWidthHeightRatio : 1f));
+                        height = v.height; fit();
+                    }
+                }
+                @Override public void onTracksChanged(Tracks t) { if (my == session) readTracks(t); }
+                @Override public void onCues(CueGroup g) {
+                    StringBuilder sb = new StringBuilder();
+                    for (Cue c : g.cues) if (c.text != null) { if (sb.length() > 0) sb.append('\n'); sb.append(c.text); }
+                    subText = sb.toString();
                 }
             });
-            mp.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {
-                public void onVideoSizeChanged(MediaPlayer p, int w, int h) { width = w; height = h; fit(); }
-            });
-            mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                public void onCompletion(MediaPlayer p) { if (my == session && !"error".equals(state)) state = "ended"; }
-            });
-            mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-                public boolean onError(MediaPlayer p, int what, int extra) {
-                    if (my != session) return true;
-                    state = "error"; error = what + "/" + extra; buffering = false;
-                    return true;
-                }
-            });
-            mp.setOnInfoListener(new MediaPlayer.OnInfoListener() {
-                public boolean onInfo(MediaPlayer p, int what, int extra) {
-                    if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) buffering = true;
-                    else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END || what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) buffering = false;
-                    return false;
-                }
-            });
-            mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
-                public void onSeekComplete(MediaPlayer p) { buffering = false; }
-            });
-            mp.setOnTimedTextListener(new MediaPlayer.OnTimedTextListener() {
-                public void onTimedText(MediaPlayer p, TimedText t) { subText = t == null || t.getText() == null ? "" : t.getText(); }
-            });
-            mp.prepareAsync();
+            exo.setMediaItem(MediaItem.fromUri(Uri.parse(url)), startMs > 0 ? startMs : C.TIME_UNSET);
+            exo.setPlayWhenReady(true);
+            exo.prepare();
         } catch (Exception e) {
             state = "error"; error = String.valueOf(e.getMessage()); buffering = false;
         }
     }
 
-    private void readTracks() {
+    /* ---------- Geluid en ondertitels ----------
+       Nummer van een spoor: groep * 1000 + spoor. Ondertitels krijgen er 100000 bij. */
+
+    private void readTracks(Tracks t) {
         StringBuilder sb = new StringBuilder("[");
-        try {
-            MediaPlayer.TrackInfo[] ti = mp.getTrackInfo();
-            for (int i = 0; i < ti.length; i++) {
-                int type = ti[i].getTrackType();
-                String kind = type == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO ? "audio"
-                        : type == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT ? "text" : null;
-                if (kind == null) continue;
+        int sel = -1;
+        List<Tracks.Group> groups = t.getGroups();
+        for (int g = 0; g < groups.size(); g++) {
+            Tracks.Group grp = groups.get(g);
+            int type = grp.getType();
+            if (type != C.TRACK_TYPE_AUDIO && type != C.TRACK_TYPE_TEXT) continue;
+            for (int i = 0; i < grp.length; i++) {
+                if (!grp.isTrackSupported(i)) continue;
+                Format f = grp.getTrackFormat(i);
+                int id = g * 1000 + i + (type == C.TRACK_TYPE_TEXT ? 100000 : 0);
+                String name = f.label != null ? f.label : (f.language != null ? f.language : "");
+                if (type == C.TRACK_TYPE_AUDIO && f.channelCount > 2 && f.label == null) name = name + " " + (f.channelCount == 6 ? "5.1" : f.channelCount + " kanalen");
                 if (sb.length() > 1) sb.append(',');
-                sb.append("{\"i\":").append(i).append(",\"kind\":\"").append(kind)
-                  .append("\",\"lang\":\"").append(esc(ti[i].getLanguage())).append("\"}");
+                sb.append("{\"i\":").append(id).append(",\"kind\":\"").append(type == C.TRACK_TYPE_AUDIO ? "audio" : "text")
+                  .append("\",\"lang\":\"").append(esc(name.trim())).append("\"}");
+                if (type == C.TRACK_TYPE_AUDIO && grp.isTrackSelected(i)) sel = id;
             }
-        } catch (Exception ignored) {}
+        }
         tracksJson = sb.append(']').toString();
+        audioSel = sel;
+        // Wel beeld in de stream, maar geen enkel videospoor dat dit toestel kan tonen? Dan als fout melden,
+        // zodat de app een ander formaat probeert in plaats van alleen geluid te spelen.
+        boolean hasVideo = false, videoOk = false;
+        for (Tracks.Group grp : groups) if (grp.getType() == C.TRACK_TYPE_VIDEO) { hasVideo = true; if (grp.isSupported()) videoOk = true; }
+        if (hasVideo && !videoOk) { state = "error"; error = "VIDEO_UNSUPPORTED"; buffering = false; if (exo != null) exo.stop(); }
     }
 
-    private void selectTrackSafe(int i) {
-        try { if (mp != null) mp.selectTrack(i); } catch (Exception ignored) {}
+    private void selectTrackSafe(int id) {
+        if (exo == null) return;
+        try {
+            boolean text = id >= 100000;
+            int raw = text ? id - 100000 : id, g = raw / 1000, i = raw % 1000;
+            List<Tracks.Group> groups = exo.getCurrentTracks().getGroups();
+            if (g >= groups.size()) return;
+            Tracks.Group grp = groups.get(g);
+            exo.setTrackSelectionParameters(exo.getTrackSelectionParameters().buildUpon()
+                    .setTrackTypeDisabled(grp.getType(), false)
+                    .setOverrideForType(new TrackSelectionOverride(grp.getMediaTrackGroup(), i))
+                    .build());
+        } catch (Exception ignored) {}
     }
 
     private static String esc(String s) {
@@ -192,28 +237,27 @@ public final class NativePlayer implements SurfaceHolder.Callback {
     /* ---------- Voor JavaScript ---------- */
 
     @JavascriptInterface public void play(final String url, final double startSec, final int audioIdx) {
-        ui(new Runnable() { public void run() { open(url, (int) Math.round(startSec * 1000), audioIdx); } });
+        ui(new Runnable() { public void run() { open(url, Math.round(startSec * 1000), audioIdx); } });
     }
     @JavascriptInterface public void pause() {
-        ui(new Runnable() { public void run() {
-            if (mp != null && "playing".equals(state)) { try { mp.pause(); state = "paused"; } catch (Exception ignored) {} }
-        } });
+        ui(new Runnable() { public void run() { if (exo != null) { exo.setPlayWhenReady(false); state = "paused"; } } });
     }
     @JavascriptInterface public void resume() {
         ui(new Runnable() { public void run() {
-            if (mp != null && ("paused".equals(state) || "ended".equals(state))) { try { mp.start(); state = "playing"; } catch (Exception ignored) {} }
+            if (exo == null) return;
+            if ("ended".equals(state)) exo.seekTo(0);
+            if (exo.isCurrentMediaItemLive()) exo.seekToDefaultPosition();   // live na pauze: terug naar nu
+            exo.setPlayWhenReady(true); state = "playing";
         } });
     }
     @JavascriptInterface public void seek(final double sec) {
         ui(new Runnable() { public void run() {
-            if (mp == null || "preparing".equals(state)) return;
-            try {
-                int ms = (int) Math.round(Math.max(0, sec) * 1000);
-                if (duration > 0) ms = Math.min(ms, Math.max(0, duration - 1500));
-                buffering = true; subText = "";
-                mp.seekTo(ms);
-                if ("ended".equals(state)) { mp.start(); state = "playing"; }
-            } catch (Exception ignored) {}
+            if (exo == null || "preparing".equals(state)) return;
+            long ms = Math.round(Math.max(0, sec) * 1000);
+            if (durationMs > 0) ms = Math.min(ms, Math.max(0, durationMs - 1500));
+            buffering = true; subText = "";
+            exo.seekTo(ms);
+            if ("ended".equals(state)) { exo.setPlayWhenReady(true); state = "playing"; }
         } });
     }
     @JavascriptInterface public void selectTrack(final int i) {
@@ -221,13 +265,14 @@ public final class NativePlayer implements SurfaceHolder.Callback {
     }
     @JavascriptInterface public void deselectTrack(final int i) {
         ui(new Runnable() { public void run() {
-            try { if (mp != null) mp.deselectTrack(i); } catch (Exception ignored) {}
+            if (exo != null) exo.setTrackSelectionParameters(exo.getTrackSelectionParameters().buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build());
             subText = "";
         } });
     }
     @JavascriptInterface public void stop() {
         ui(new Runnable() { public void run() {
-            session++; pendingUrl = null;
+            session++;
             release();
             state = "idle"; buffering = false; subText = "";
             surface.setVisibility(View.GONE);
@@ -241,21 +286,18 @@ public final class NativePlayer implements SurfaceHolder.Callback {
         } });
     }
     @JavascriptInterface public String state() {
-        int pos = 0, sel = -1;
-        MediaPlayer p = mp;
-        if (p != null && !"preparing".equals(state) && !"error".equals(state)) {
-            try { pos = p.getCurrentPosition(); } catch (Exception ignored) {}
-            try { sel = p.getSelectedTrack(MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO); } catch (Throwable ignored) {}
-        }
-        return "{\"state\":\"" + state + "\",\"t\":" + (pos / 1000.0) + ",\"d\":" + (duration / 1000.0)
+        boolean live = "idle".equals(state) ? false : durationMs == 0;
+        return "{\"state\":\"" + state + "\",\"t\":" + (positionMs / 1000.0) + ",\"d\":" + (durationMs / 1000.0)
                 + ",\"w\":" + width + ",\"h\":" + height + ",\"buffering\":" + buffering
-                + ",\"audioSel\":" + sel + ",\"tracks\":" + tracksJson
+                + ",\"audioSel\":" + audioSel + ",\"tracks\":" + tracksJson + ",\"live\":" + live
                 + ",\"sub\":\"" + esc(subText) + "\",\"error\":\"" + esc(error) + "\"}";
     }
 
     /** Bij het verlaten van de app. */
     public void onPause() {
-        if (mp != null && "playing".equals(state)) { try { mp.pause(); state = "paused"; } catch (Exception ignored) {} }
+        ui(new Runnable() { public void run() {
+            if (exo != null && exo.getPlayWhenReady()) { exo.setPlayWhenReady(false); state = "paused"; }
+        } });
     }
-    public void destroy() { session++; release(); }
+    public void destroy() { session++; main.removeCallbacks(tick); release(); }
 }

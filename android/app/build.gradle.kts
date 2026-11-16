@@ -62,6 +62,10 @@ android {
 }
 
 dependencies {
+    // Speler: Media3 (ExoPlayer) met HLS, en FFmpeg voor geluid als AC3, E-AC3, DTS en TrueHD
+    implementation("androidx.media3:media3-exoplayer:1.5.0")
+    implementation("androidx.media3:media3-exoplayer-hls:1.5.0")
+    implementation("org.jellyfin.media3:media3-ffmpeg-decoder:1.5.0+1")
     // Chromecast
     implementation("com.google.android.gms:play-services-cast-framework:21.5.0")
     implementation("androidx.mediarouter:mediarouter:1.7.0")
