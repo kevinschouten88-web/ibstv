@@ -2722,7 +2722,7 @@ function natPoll(sid){
     if(n.urlIdx + 1 < n.urls.length){ natStart(PB.it, PB.wantAt, PB.live, n.urlIdx + 1); return; }
     if(PB.live){ delete NATLIVE[PB.it.id]; store('natLive', NATLIVE); showMsg('Deze zender start niet. Mogelijk is hij op dit moment offline.', 0, true); }
     else if(st.error === 'VIDEO_UNSUPPORTED') showMsg(`Het beeld van dit bestand gebruikt een formaat dat je ${DEV} niet kan tonen (bijvoorbeeld H.265 op een ouder toestel).`, 0, true);
-    else showMsg(`Dit bestand kan je ${DEV} niet afspelen. Mogelijk gebruikt het een formaat dat niet wordt ondersteund, of staat het niet meer bij je provider.`, 0, true);
+    else showMsg(`Dit bestand kan je ${DEV} niet afspelen. Mogelijk gebruikt het een formaat dat niet wordt ondersteund, of staat het niet meer bij je provider. (${(PB.it && PB.it.ext) || '?'} · ${st.error || 'onbekend'})`, 0, true);
     return;
   }
   if(st.state === 'ended' && !n.ended && !PB.live){

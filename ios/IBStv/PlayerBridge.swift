@@ -42,6 +42,7 @@ final class PlayerBridge: NSObject, AVPictureInPictureControllerDelegate {
     private var pendingAudio: Int32 = -1
     private var pendingStart: Double = 0
     private var picked = false
+    private var vlcSeen = false      // heeft VLC al iets gedaan (openen, bufferen, spelen)?
 
     /// Plaats van het beeld in CSS-pixels; nil = hele scherm.
     private(set) var box: CGRect?
@@ -184,6 +185,7 @@ final class PlayerBridge: NSObject, AVPictureInPictureControllerDelegate {
 
     private func playVlc(_ u: URL, start: Double) {
         engine = .vlc
+        vlcSeen = false
         let media = VLCMedia(url: u)
         var opts: [String: Any] = ["http-user-agent": SchemeHandler.userAgent, "network-caching": 1500, "http-reconnect": true]
         if start > 0 { opts["start-time"] = start }
@@ -302,12 +304,16 @@ final class PlayerBridge: NSObject, AVPictureInPictureControllerDelegate {
         case .paused:
             if state != "preparing" { state = "paused" }
         case .playing:
+            vlcSeen = true
             state = "playing"
         case .buffering, .opening:
+            vlcSeen = true
             if vlc.isPlaying && timeSec > 0 { state = "playing" }
         case .stopped, .ended:
+            // Vlak na het starten staat VLC nog even op "gestopt" voordat hij gaat openen;
+            // pas een fout als hij al bezig was, of als er na 25 seconden nog niets gebeurd is.
             if state == "preparing" {
-                if Date().timeIntervalSince(startedAt) > 1.5 { state = "error" }
+                if vlcSeen || Date().timeIntervalSince(startedAt) > 25 { state = "error" }
             } else if state == "playing" || state == "paused" {
                 state = "ended"
             }
